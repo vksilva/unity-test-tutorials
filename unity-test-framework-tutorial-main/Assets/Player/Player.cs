@@ -126,8 +126,6 @@ public class Player : MonoBehaviour
         InputAction jumpAction      = playerInput.FindActionMap("Player").FindAction("Jump");
         InputAction resetAction     = playerInput.FindActionMap("Player").FindAction("Reset");
 
-        Debug.Log($"Primary Action: {primaryAction.phase.ToString()}");
-        
         bool primaryAttack   = primaryAction.phase == InputActionPhase.Started;
         bool secondaryAttack = secondaryAction.phase == InputActionPhase.Started;
         bool tertiaryAttack  = tertiaryAction.phase == InputActionPhase.Started;
