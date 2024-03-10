@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
@@ -5,10 +6,11 @@ using UnityEngine.TestTools;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.SceneManagement;
+using Object = UnityEngine.Object;
 
 namespace Tests
 {
-    public class TestSuite: InputTestFixture
+    public class TestSuite : InputTestFixture
     {
         private readonly Player playerPrefab = Resources.Load<Player>("Player");
         private Skeleton skeletonPrefab = Resources.Load<Skeleton>("ArmedSkeleton");
@@ -22,29 +24,33 @@ namespace Tests
             SceneManager.LoadScene("Scenes/Sandbox");
             mouse = InputSystem.AddDevice<Mouse>();
             keyboard = InputSystem.AddDevice<Keyboard>();
-            
+
             playerPrefab.activeCam = false;
         }
 
         [TearDown]
         public override void TearDown()
         {
-            InputUser.listenForUnpairedDeviceActivity = 10;
+            // Bug: Workaround Unity's ArgumentOutOfRangeException when tearing playmode tests down. 
+            var inputs = Object.FindObjectsOfType<PlayerInput>();
+            foreach (var input in inputs)
+            {
+                Object.DestroyImmediate(input);
+            }
             base.TearDown();
         }
 
-        // A Test behaves as an ordinary method
         [Test]
         public void TestPlayerDamage()
         {
             var playerPos = Vector3.zero;
             var playerDir = Quaternion.identity;
             var player = Object.Instantiate(playerPrefab, playerPos, playerDir);
-        
+
             Assert.That(player.health, Is.EqualTo(100f));
-        
+
             player.applyDamage(20f);
-        
+
             Assert.That(player.health, Is.EqualTo(80f));
             Assert.AreEqual(player.health, 80f);
         }
@@ -57,21 +63,20 @@ namespace Tests
             var skeletonPos = new Vector3(2f, 0f, 1f);
             var skeletonDir = Quaternion.identity;
 
-            var player = GameObject.Instantiate(playerPrefab, playerPos, playerDir);
-            var skeleton = GameObject.Instantiate(skeletonPrefab, skeletonPos, skeletonDir);
-            
+            var player = Object.Instantiate(playerPrefab, playerPos, playerDir);
+            var skeleton = Object.Instantiate(skeletonPrefab, skeletonPos, skeletonDir);
+
             skeleton.enabled = false;
             skeleton.player = player;
 
             Assert.AreEqual(skeleton.health, 100f);
-            
+
             Press(mouse.leftButton);
             yield return new WaitForSeconds(0.1f);
             Release(mouse.leftButton);
             yield return new WaitForSeconds(3f);
-            
+
             Assert.AreEqual(skeleton.health, 80f);
         }
-
     }
 }
